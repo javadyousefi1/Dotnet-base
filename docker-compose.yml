@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dotnetbase-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dotnetbase
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dotnetbase-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: dotnetbase-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - dotnetbase-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  dotnetbase-network:
+    driver: bridge
