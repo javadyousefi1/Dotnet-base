@@ -1,5 +1,4 @@
 using Domain.Entities;
-using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -42,13 +41,15 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.UpdatedAt);
 
-        builder.Property(u => u.Roles)
-            .HasConversion(
-                v => string.Join(',', v.Select(r => (int)r)),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                      .Select(r => (UserRole)int.Parse(r))
-                      .ToList())
-            .HasColumnName("Roles")
-            .IsRequired();
+        builder.Property(u => u.DeletedAt);
+
+        // Configure many-to-many relationship with UserRole
+        builder.HasMany(u => u.UserRoles)
+            .WithOne(ur => ur.User)
+            .HasForeignKey(ur => ur.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Ignore the computed Roles property
+        builder.Ignore(u => u.Roles);
     }
 }

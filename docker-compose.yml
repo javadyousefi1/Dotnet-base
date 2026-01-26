@@ -16,7 +16,7 @@ services:
       - dotnetbase-network
 
   redis:
-    image: redis:7-alpine
+    image: hub.hamdocker.ir/library/redis:latest
     container_name: dotnetbase-redis
     ports:
       - "6379:6379"
@@ -25,9 +25,22 @@ services:
     networks:
       - dotnetbase-network
 
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: dotnetbase-redisinsight
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight_data:/data
+    networks:
+      - dotnetbase-network
+    depends_on:
+      - redis
+
 volumes:
   postgres_data:
   redis_data:
+  redisinsight_data:
 
 networks:
   dotnetbase-network:

@@ -1,4 +1,5 @@
 using MediatR;
+using SharedKernel;
 
 namespace Application.Authentication.VerifyOtp;
 
@@ -7,4 +8,4 @@ public sealed record VerifyOtpCommand(
     string Otp,
     string? Name = null,
     string? Family = null
-) : IRequest<VerifyOtpResult>;
+) : IRequest<Result<AuthenticationResponse>>;

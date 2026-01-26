@@ -1,9 +1,10 @@
 using Application.Common.Abstractions;
 using MediatR;
+using SharedKernel;
 
 namespace Application.Authentication.GetOtp;
 
-public sealed class GetOtpCommandHandler : IRequestHandler<GetOtpCommand, GetOtpResult>
+public sealed class GetOtpCommandHandler : IRequestHandler<GetOtpCommand, Result<string>>
 {
     private readonly IOtpCache _otpCache;
 
@@ -12,14 +13,14 @@ public sealed class GetOtpCommandHandler : IRequestHandler<GetOtpCommand, GetOtp
         _otpCache = otpCache;
     }
 
-    public async Task<GetOtpResult> Handle(GetOtpCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(GetOtpCommand request, CancellationToken cancellationToken)
     {
         var otp = GenerateOtp();
         var expiration = TimeSpan.FromMinutes(2);
 
         await _otpCache.SetOtpAsync(request.PhoneNumber, otp, expiration, cancellationToken);
 
-        return new GetOtpResult(true, $"OTP sent successfully. (Development: {otp})");
+        return Result.Success($"OTP sent successfully. (Development: {otp})");
     }
 
     private static string GenerateOtp()

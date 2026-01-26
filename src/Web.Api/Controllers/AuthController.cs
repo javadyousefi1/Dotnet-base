@@ -2,6 +2,7 @@ using Application.Authentication.GetOtp;
 using Application.Authentication.VerifyOtp;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using SharedKernel;
 
 namespace Web.Api.Controllers;
 
@@ -22,7 +23,7 @@ public sealed class AuthController : ControllerBase
         var command = new GetOtpCommand(request.PhoneNumber);
         var result = await _sender.Send(command, cancellationToken);
 
-        return Ok(result);
+        return result.ToActionResult();
     }
 
     [HttpPost("verifyOtp")]
@@ -36,17 +37,7 @@ public sealed class AuthController : ControllerBase
 
         var result = await _sender.Send(command, cancellationToken);
 
-        if (!result.Success)
-        {
-            return BadRequest(new { result.Message });
-        }
-
-        return Ok(new
-        {
-            result.Token,
-            result.ExpiresAt,
-            result.Message
-        });
+        return result.ToActionResult();
     }
 }
 

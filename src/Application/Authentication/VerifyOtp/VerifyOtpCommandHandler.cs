@@ -1,11 +1,12 @@
 using Application.Common.Abstractions;
 using Domain.Entities;
-using Domain.Enums;
+using Domain.Errors;
 using MediatR;
+using SharedKernel;
 
 namespace Application.Authentication.VerifyOtp;
 
-public sealed class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, VerifyOtpResult>
+public sealed class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, Result<AuthenticationResponse>>
 {
     private readonly IOtpCache _otpCache;
     private readonly IUserRepository _userRepository;
@@ -21,13 +22,13 @@ public sealed class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, 
         _jwtProvider = jwtProvider;
     }
 
-    public async Task<VerifyOtpResult> Handle(VerifyOtpCommand request, CancellationToken cancellationToken)
+    public async Task<Result<AuthenticationResponse>> Handle(VerifyOtpCommand request, CancellationToken cancellationToken)
     {
         var storedOtp = await _otpCache.GetOtpAsync(request.PhoneNumber, cancellationToken);
 
         if (storedOtp is null || storedOtp != request.Otp)
         {
-            return new VerifyOtpResult(false, null, null, "Invalid or expired OTP");
+            return Result.Failure<AuthenticationResponse>(UserErrors.InvalidOtp());
         }
 
         await _otpCache.RemoveOtpAsync(request.PhoneNumber, cancellationToken);
@@ -36,15 +37,10 @@ public sealed class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, 
 
         if (user is null)
         {
-            user = new User
-            {
-                Id = Guid.NewGuid(),
-                PhoneNumber = request.PhoneNumber,
-                Name = request.Name ?? string.Empty,
-                Family = request.Family ?? string.Empty,
-                CreatedAt = DateTime.UtcNow,
-                Roles = new List<UserRole> { UserRole.User }
-            };
+            user = User.Create(
+                request.PhoneNumber,
+                request.Name ?? string.Empty,
+                request.Family ?? string.Empty);
 
             await _userRepository.AddAsync(user, cancellationToken);
             await _userRepository.SaveChangesAsync(cancellationToken);
@@ -52,6 +48,8 @@ public sealed class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, 
 
         var token = _jwtProvider.Generate(user.Id, user.Roles);
 
-        return new VerifyOtpResult(true, token.Token, token.ExpiresAt, "Authentication successful");
+        var response = new AuthenticationResponse(token.Token, token.ExpiresAt);
+
+        return Result.Success(response);
     }
 }
