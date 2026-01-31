@@ -10,4 +10,5 @@ public interface IUserRepository
     Task<(List<User> Users, int TotalCount)> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken = default);
     Task AddAsync(User user, CancellationToken cancellationToken = default);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<User> UpdateInfoAsync(User user, CancellationToken cancellationToken = default);
 }
