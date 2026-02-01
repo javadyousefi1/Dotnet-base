@@ -1,4 +1,5 @@
 using Application.Users.GetAllUsers;
+using Application.Users.Update;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,4 +32,31 @@ public sealed class UserController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpPut("update")]
+    public async Task<IActionResult> UpdateUser(
+        [FromBody] UpdateUserRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new UpdateUserCommand(
+            request.FirstName,
+            request.LastName,
+            request.Email
+        );
+
+        var result = await _sender.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return BadRequest(new { error = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
 }
+
+public sealed record UpdateUserRequest(
+    string FirstName,
+    string LastName,
+    string? Email = null
+);

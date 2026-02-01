@@ -1,10 +1,10 @@
-using Application.Authentication.VerifyOtp;
 using MediatR;
 using SharedKernel;
 
 namespace Application.Users.Update;
 
-public sealed class UpdateUserCommand(
+public sealed record UpdateUserCommand(
     string FirstName,
-    string LastName
+    string LastName,
+    string? Email = null
 ) : IRequest<Result<UpdateUserResponse>>;

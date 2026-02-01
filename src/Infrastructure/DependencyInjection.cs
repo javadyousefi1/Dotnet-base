@@ -1,6 +1,7 @@
 using Application.Common.Abstractions;
 using Infrastructure.Authentication;
 using Infrastructure.Caching;
+using Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
@@ -19,6 +20,9 @@ public static class DependencyInjection
 
         services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConnection));
         services.AddScoped<IOtpCache, RedisOtpCache>();
+
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         return services;
     }
