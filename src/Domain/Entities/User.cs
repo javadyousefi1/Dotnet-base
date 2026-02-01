@@ -49,6 +49,24 @@ public sealed class User : BaseEntity
         Email = email;
     }
 
+    public void UpdateProfilePartial(string? name = null, string? family = null, string? email = null)
+    {
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            Name = name;
+        }
+
+        if (!string.IsNullOrWhiteSpace(family))
+        {
+            Family = family;
+        }
+
+        if (email is not null)
+        {
+            Email = email;
+        }
+    }
+
     public void AddRole(UserRole role)
     {
         if (!_userRoles.Any(ur => ur.Role == role))

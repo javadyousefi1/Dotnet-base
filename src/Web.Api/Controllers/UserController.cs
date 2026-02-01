@@ -56,7 +56,7 @@ public sealed class UserController : ControllerBase
 }
 
 public sealed record UpdateUserRequest(
-    string FirstName,
-    string LastName,
+    string? FirstName = null,
+    string? LastName = null,
     string? Email = null
 );

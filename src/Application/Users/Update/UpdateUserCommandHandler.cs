@@ -29,6 +29,13 @@ public sealed class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand
                 "User is not authenticated"));
         }
 
+        if (request.FirstName is null && request.LastName is null && request.Email is null)
+        {
+            return Result.Failure<UpdateUserResponse>(Error.Validation(
+                "User.NoFieldsToUpdate",
+                "At least one field must be provided for update"));
+        }
+
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
 
         if (user is null)
@@ -36,17 +43,17 @@ public sealed class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand
             return Result.Failure<UpdateUserResponse>(UserErrors.NotFound(userId));
         }
 
-        if (string.IsNullOrWhiteSpace(request.FirstName))
+        if (request.FirstName is not null && string.IsNullOrWhiteSpace(request.FirstName))
         {
             return Result.Failure<UpdateUserResponse>(UserErrors.InvalidName());
         }
 
-        if (string.IsNullOrWhiteSpace(request.LastName))
+        if (request.LastName is not null && string.IsNullOrWhiteSpace(request.LastName))
         {
             return Result.Failure<UpdateUserResponse>(UserErrors.InvalidFamily());
         }
 
-        user.UpdateProfile(request.FirstName, request.LastName, request.Email);
+        user.UpdateProfilePartial(request.FirstName, request.LastName, request.Email);
 
         await _userRepository.UpdateInfoAsync(user, cancellationToken);
         await _userRepository.SaveChangesAsync(cancellationToken);
