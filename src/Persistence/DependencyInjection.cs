@@ -2,7 +2,6 @@ using Application.Common.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Persistence.Repositories;
 
 namespace Persistence;
 
@@ -16,7 +15,7 @@ public static class DependencyInjection
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
         return services;
     }

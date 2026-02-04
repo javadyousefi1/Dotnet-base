@@ -53,10 +53,33 @@ public sealed class UserController : ControllerBase
 
         return Ok(result.Value);
     }
+    
+    [HttpDelete("delete")]
+    public async Task<IActionResult> DeleteUser(
+        [FromBody] DeleteUserRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new DeleteUserCommand(
+            request.UserId
+        );
+
+        var result = await _sender.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return BadRequest(new { error = result.Error });
+        }
+
+        return Ok(result);
+    }
 }
 
 public sealed record UpdateUserRequest(
     string? FirstName = null,
     string? LastName = null,
     string? Email = null
+);
+
+public sealed record DeleteUserRequest(
+    Guid UserId
 );

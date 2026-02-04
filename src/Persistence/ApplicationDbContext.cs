@@ -1,10 +1,11 @@
+using Application.Common.Abstractions;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Persistence;
 
-public sealed class ApplicationDbContext : DbContext
+public sealed class ApplicationDbContext : DbContext, IAppDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)

@@ -1,24 +1,31 @@
 using Application.Common.Abstractions;
 using Application.Common.Models;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Users.GetAllUsers;
 
 public sealed class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, PaginatedResult<UserDto>>
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IAppDbContext _dbContext;
 
-    public GetAllUsersQueryHandler(IUserRepository userRepository)
+    public GetAllUsersQueryHandler(IAppDbContext dbContext)
     {
-        _userRepository = userRepository;
+        _dbContext = dbContext;
     }
 
     public async Task<PaginatedResult<UserDto>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
     {
-        var (users, totalCount) = await _userRepository.GetAllAsync(
-            request.Page,
-            request.PageSize,
-            cancellationToken);
+        var query = _dbContext.Users
+            .Include(u => u.UserRoles)
+            .AsNoTracking();
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var users = await query
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .ToListAsync(cancellationToken);
 
         var userDtos = users.Select(u => new UserDto(
             u.Id,

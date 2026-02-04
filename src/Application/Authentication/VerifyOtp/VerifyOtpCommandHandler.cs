@@ -2,6 +2,7 @@ using Application.Common.Abstractions;
 using Domain.Entities;
 using Domain.Errors;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.Authentication.VerifyOtp;
@@ -9,16 +10,16 @@ namespace Application.Authentication.VerifyOtp;
 public sealed class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, Result<AuthenticationResponse>>
 {
     private readonly IOtpCache _otpCache;
-    private readonly IUserRepository _userRepository;
+    private readonly IAppDbContext _dbContext;
     private readonly IJwtProvider _jwtProvider;
 
     public VerifyOtpCommandHandler(
         IOtpCache otpCache,
-        IUserRepository userRepository,
+        IAppDbContext dbContext,
         IJwtProvider jwtProvider)
     {
         _otpCache = otpCache;
-        _userRepository = userRepository;
+        _dbContext = dbContext;
         _jwtProvider = jwtProvider;
     }
 
@@ -33,7 +34,9 @@ public sealed class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, 
 
         await _otpCache.RemoveOtpAsync(request.PhoneNumber, cancellationToken);
 
-        var user = await _userRepository.GetByPhoneNumberAsync(request.PhoneNumber, cancellationToken);
+        var user = await _dbContext.Users
+            .Include(u => u.UserRoles)
+            .FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber, cancellationToken);
 
         if (user is null)
         {
@@ -42,8 +45,8 @@ public sealed class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, 
                 request.Name ?? string.Empty,
                 request.Family ?? string.Empty);
 
-            await _userRepository.AddAsync(user, cancellationToken);
-            await _userRepository.SaveChangesAsync(cancellationToken);
+            await _dbContext.Users.AddAsync(user, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
         var token = _jwtProvider.Generate(user.Id, user.Roles);

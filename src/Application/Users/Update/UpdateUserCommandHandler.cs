@@ -1,20 +1,21 @@
 using Application.Common.Abstractions;
 using Domain.Errors;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.Users.Update;
 
 public sealed class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Result<UpdateUserResponse>>
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IAppDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
 
     public UpdateUserCommandHandler(
-        IUserRepository userRepository,
+        IAppDbContext dbContext,
         ICurrentUserService currentUserService)
     {
-        _userRepository = userRepository;
+        _dbContext = dbContext;
         _currentUserService = currentUserService;
     }
 
@@ -36,7 +37,9 @@ public sealed class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand
                 "At least one field must be provided for update"));
         }
 
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await _dbContext.Users
+            .Include(u => u.UserRoles)
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 
         if (user is null)
         {
@@ -55,8 +58,7 @@ public sealed class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand
 
         user.UpdateProfilePartial(request.FirstName, request.LastName, request.Email);
 
-        await _userRepository.UpdateInfoAsync(user, cancellationToken);
-        await _userRepository.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return Result.Success(new UpdateUserResponse(user.Id.ToString()));
     }

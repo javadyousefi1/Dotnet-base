@@ -74,13 +74,5 @@ public sealed class User : BaseEntity
             _userRoles.Add(UserRoleEntity.Create(Id, role));
         }
     }
-
-    public void RemoveRole(UserRole role)
-    {
-        var userRole = _userRoles.FirstOrDefault(ur => ur.Role == role);
-        if (userRole != null)
-        {
-            _userRoles.Remove(userRole);
-        }
-    }
+    
 }
