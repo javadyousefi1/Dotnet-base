@@ -4,7 +4,7 @@ using SharedKernel;
 
 namespace Application.Authentication.GetOtp;
 
-public sealed class GetOtpCommandHandler : IRequestHandler<GetOtpCommand, Result<string>>
+public sealed class GetOtpCommandHandler : IRequestHandler<GetOtpCommand, Result<GetOtpResult>>
 {
     private readonly IOtpCache _otpCache;
 
@@ -13,14 +13,14 @@ public sealed class GetOtpCommandHandler : IRequestHandler<GetOtpCommand, Result
         _otpCache = otpCache;
     }
 
-    public async Task<Result<string>> Handle(GetOtpCommand request, CancellationToken cancellationToken)
+    public async Task<Result<GetOtpResult>> Handle(GetOtpCommand request, CancellationToken cancellationToken)
     {
         var otp = GenerateOtp();
         var expiration = TimeSpan.FromMinutes(2);
 
         await _otpCache.SetOtpAsync(request.PhoneNumber, otp, expiration, cancellationToken);
 
-        return Result.Success($"OTP sent successfully. (Development: {otp})");
+        return Result.Success(new GetOtpResult(true, otp));
     }
 
     private static string GenerateOtp()

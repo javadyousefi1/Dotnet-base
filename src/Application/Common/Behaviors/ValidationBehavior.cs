@@ -42,6 +42,20 @@ public sealed class ValidationBehavior<TRequest, TResponse>
                 "Validation.Failed",
                 string.Join("; ", failures.Select(f => f.ErrorMessage)));
 
+            // Use reflection to create the correct generic Result<T>.Failure
+            var resultType = typeof(TResponse);
+            if (resultType.IsGenericType && resultType.GetGenericTypeDefinition() == typeof(Result<>))
+            {
+                var valueType = resultType.GetGenericArguments()[0];
+                var failureMethod = typeof(Result)
+                    .GetMethods()
+                    .First(m => m.Name == nameof(Result.Failure) &&
+                                m.IsGenericMethod &&
+                                m.GetParameters().Length == 1)
+                    .MakeGenericMethod(valueType);
+                return (TResponse)failureMethod.Invoke(null, new object[] { error })!;
+            }
+
             return (TResponse)Result.Failure(error);
         }
 

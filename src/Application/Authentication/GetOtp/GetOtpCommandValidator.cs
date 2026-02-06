@@ -1,5 +1,4 @@
 using FluentValidation;
-
 namespace Application.Authentication.GetOtp;
 
 public sealed class GetOtpCommandValidator : AbstractValidator<GetOtpCommand>

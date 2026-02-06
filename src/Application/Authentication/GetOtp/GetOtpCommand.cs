@@ -5,4 +5,4 @@ namespace Application.Authentication.GetOtp;
 
 public sealed record GetOtpCommand(
     string PhoneNumber
-) : IRequest<Result<string>>;
+) : IRequest<Result<GetOtpResult>>;

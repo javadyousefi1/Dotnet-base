@@ -21,6 +21,11 @@ public sealed class UserRoleEntity
 
     public static UserRoleEntity Create(Guid userId, UserRole role)
     {
+        if (!Enum.IsDefined(typeof(UserRole), role))
+        {
+            throw new ArgumentException($"Invalid role value: {(int)role}. Role must be a valid UserRole enum member.", nameof(role));
+        }
+
         return new UserRoleEntity(userId, role);
     }
 }

@@ -1,3 +1,4 @@
+using Application.Authentication.GetOtp;
 using Application.Users.GetAllUsers;
 using Application.Users.Update;
 using MediatR;
@@ -61,6 +62,26 @@ public sealed class UserController : ControllerBase
     {
         var command = new DeleteUserCommand(
             request.UserId
+        );
+
+        var result = await _sender.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return BadRequest(new { error = result.Error });
+        }
+
+        return Ok(result);
+    }
+    
+    [HttpPatch("RoleMangement")]
+    public async Task<IActionResult> RoleMangementUser(
+        [FromBody] RoleMangementCommand request,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new RoleMangementCommand(
+            request.userId,
+            request.roles
         );
 
         var result = await _sender.Send(command, cancellationToken);

@@ -69,9 +69,24 @@ public sealed class User : BaseEntity
 
     public void AddRole(UserRole role)
     {
+        if (!Enum.IsDefined(typeof(UserRole), role))
+        {
+            throw new ArgumentException($"Invalid role value: {role}", nameof(role));
+        }
+        
         if (!_userRoles.Any(ur => ur.Role == role))
         {
             _userRoles.Add(UserRoleEntity.Create(Id, role));
+        }
+    }
+    
+    public void AddRoles(IEnumerable<UserRole> roles)
+    {
+        
+        _userRoles.Clear();
+        foreach (var role in roles)
+        {
+            AddRole(role);
         }
     }
     
